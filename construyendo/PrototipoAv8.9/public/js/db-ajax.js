@@ -104,9 +104,11 @@ function renderAlertas(lista) {
     const body = document.getElementById('alertasBody');
     if (!body) return;
 
+    var esOficial = (window.ROL_USUARIO === 'Oficial de Cumplimiento');
+
     body.innerHTML = lista.map(function(alerta) {
         var acciones = '';
-        if (alerta.estatus === 'Pendiente') {
+        if (esOficial && alerta.estatus === 'Pendiente') {
             acciones += `<button class="btn-small btn" type="button" onclick="moverEnRevision('${alerta.idAlerta}')">En revision</button> `;
         }
         if (alerta.estatus !== 'Resuelta') {

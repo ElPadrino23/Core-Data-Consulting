@@ -45,7 +45,7 @@
                         <td><%= r.responsable || '—' %></td>
                         <td><%= r.fecha || '—' %></td>
                         <td>
-                            <% if (r.estatus !== 'Cerrado') { %>
+                            <% if (r.estatus !== 'Cerrado' && usuario && usuario.rol === 'Oficial de Cumplimiento') { %>
                             <form action="/buzon-interno/actualizar" method="POST" style="display:flex;gap:6px;">
                                 <input type="hidden" name="id" value="<%= r.id %>">
                                 <input type="text" name="responsable" placeholder="Responsable" value="<%= r.responsable || '' %>" style="border:1px solid var(--borde);border-radius:6px;padding:6px 10px;font-size:13px;width:130px;">

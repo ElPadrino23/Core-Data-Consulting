@@ -73,6 +73,7 @@
     <% if (alerta.estatus !== 'Resuelta') { %>
     <section class="panel">
         <h3 style="margin:0 0 16px;color:var(--azul-oscuro);font-size:16px;">Dictamen y resolucion</h3>
+        <% if (usuario && usuario.rol === 'Oficial de Cumplimiento') { %>
         <form action="/alertas/resolver-detalle" method="POST">
             <input type="hidden" name="idAlerta" value="<%= alerta.idalerta %>">
 
@@ -85,6 +86,7 @@
                 <button type="submit" class="btn">Marcar como Resuelta</button>
             </div>
         </form>
+    <% } %>
     </section>
     <% } else { %>
     <section class="panel">

@@ -53,6 +53,8 @@
 
 <script src="/js/db-ajax.js"></script>
 <script>
+    window.ROL_USUARIO = "<%= usuario ? usuario.rol : '' %>";
+
     var todasLasAlertas = [];
 
     function filtrarAlertas(estatus) {
