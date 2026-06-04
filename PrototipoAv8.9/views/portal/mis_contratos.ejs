@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><%- include('../css') %></head>
+<body>
+<%- include('../nav') %>
+<main class="app-page">
+    <div class="app-header">
+        <div>
+            <h1 class="app-title">Mis Contratos</h1>
+            <p class="app-subtitle">Contratos activos vinculados a tu cuenta.</p>
+        </div>
+    </div>
+    <section class="panel">
+        <% if (contratos && contratos.length > 0) { %>
+        <table class="data-table">
+            <thead>
+                <tr><th>ID</th><th>Producto</th><th>Fecha Inicio</th><th>Vencimiento</th><th>Saldo</th><th>Estatus</th></tr>
+            </thead>
+            <tbody>
+            <% contratos.forEach(c => { %>
+                <tr>
+                    <td><%= c.idcontrato %></td>
+                    <td><%= c.producto || '—' %></td>
+                    <td><%= c.fechainicio ? String(c.fechainicio).substring(0,10) : '—' %></td>
+                    <td><%= c.vencimiento ? String(c.vencimiento).substring(0,10) : '—' %></td>
+                    <td>$<%= Number(c.saldo||0).toLocaleString('es-MX') %></td>
+                    <td><span class="badge badge-success"><%= c.estatus || 'Activo' %></span></td>
+                </tr>
+            <% }); %>
+            </tbody>
+        </table>
+        <% } else { %>
+            <p style="color:#888;padding:16px 0;">No hay contratos registrados aun.</p>
+        <% } %>
+    </section>
+</main>
+<%- include('../scripts') %>
+</body></html>

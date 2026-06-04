@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><%- include('../css') %></head>
+<body>
+<%- include('../nav') %>
+<main class="app-page">
+    <div class="app-header">
+        <div>
+            <h1 class="app-title">Mi Expediente</h1>
+            <p class="app-subtitle">Consulta tu informacion registrada en el sistema.</p>
+        </div>
+    </div>
+
+    <% if (mensaje) { %>
+        <div class="alert-msg alert-warning" style="background:#fff3cd;border:1px solid #ffc107;padding:12px 16px;border-radius:6px;margin-bottom:16px;color:#856404;">
+            <%= mensaje %>
+        </div>
+    <% } %>
+
+    <% if (cliente) { %>
+    <section class="panel">
+        <div class="detail-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Nombre / Razon Social</span>
+                <span style="font-weight:600;"><%= cliente.nombrerazonsocial || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">RFC</span>
+                <span style="font-weight:600;"><%= cliente.rfc || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">CURP</span>
+                <span style="font-weight:600;"><%= cliente.curp || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Tipo de cliente</span>
+                <span style="font-weight:600;"><%= cliente.tipocliente || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Correo electronico</span>
+                <span style="font-weight:600;"><%= cliente.correoelectronico || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Telefono</span>
+                <span style="font-weight:600;"><%= cliente.telefono || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Ciudad</span>
+                <span style="font-weight:600;"><%= cliente.ciudad || '—' %></span>
+            </div>
+            <div class="detail-item">
+                <span style="display:block;font-size:12px;color:#888;margin-bottom:4px;">Nivel de riesgo</span>
+                <% const nr = cliente.nivelriesgo || ''; %>
+                <span class="badge badge-<%= nr==='Alto'?'danger':nr==='Medio'?'warning':'success' %>"><%= nr || '—' %></span>
+            </div>
+        </div>
+    </section>
+
+    <h2 style="margin:24px 0 12px;font-size:16px;color:var(--azul-oscuro);">Documentos cargados</h2>
+    <% if (documentos && documentos.length > 0) { %>
+    <section class="panel">
+        <table class="data-table">
+            <thead><tr><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody>
+            <% documentos.forEach(d => { %>
+                <tr>
+                    <td><%= d.tipodocumento || '—' %></td>
+                    <td><span class="badge badge-<%= d.estadovalidacion==='Aprobado'?'success':'warning' %>"><%= d.estadovalidacion || 'Pendiente' %></span></td>
+                    <td><%= d.fechacarga ? String(d.fechacarga).substring(0,10) : '—' %></td>
+                </tr>
+            <% }); %>
+            </tbody>
+        </table>
+    </section>
+    <% } else { %>
+        <p style="color:#888;padding:12px 0;">No hay documentos registrados aun.</p>
+    <% } %>
+    <% } %>
+</main>
+<%- include('../scripts') %>
+</body></html>
