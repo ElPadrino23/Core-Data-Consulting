@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><%- include('../css') %></head>
+<body>
+<%- include('../nav') %>
+<main class="app-page">
+    <div class="app-header">
+        <div>
+            <h1 class="app-title">Mis Operaciones</h1>
+            <p class="app-subtitle">Historial de tus operaciones registradas.</p>
+        </div>
+    </div>
+    <section class="panel">
+        <% if (operaciones && operaciones.length > 0) { %>
+        <table class="data-table">
+            <thead>
+                <tr><th>ID</th><th>Tipo</th><th>Producto</th><th>Monto</th><th>Moneda</th><th>Fecha</th><th>Estatus</th></tr>
+            </thead>
+            <tbody>
+            <% operaciones.forEach(op => { %>
+                <tr>
+                    <td><%= op.idoperacion %></td>
+                    <td><%= op.tipooperacion || '—' %></td>
+                    <td><%= op.producto || '—' %></td>
+                    <td>$<%= Number(op.monto||0).toLocaleString('es-MX') %></td>
+                    <td><%= op.moneda || 'MXN' %></td>
+                    <td><%= op.fecha ? String(op.fecha).substring(0,10) : '—' %></td>
+                    <td><span class="badge badge-info"><%= op.estatus || 'Registrada' %></span></td>
+                </tr>
+            <% }); %>
+            </tbody>
+        </table>
+        <% } else { %>
+            <p style="color:#888;padding:16px 0;">No hay operaciones registradas aun.</p>
+        <% } %>
+    </section>
+</main>
+<%- include('../scripts') %>
+</body></html>

@@ -1,4 +1,4 @@
-// Controlador de administracion de usuarios
+// Controlador de administracion de usuarios del sistema
 
 const supabase  = require('../config/supabase');
 const modelPEP  = require('../models/lista_pep.model');
@@ -10,7 +10,7 @@ module.exports.ListaUsuarios = async (req, res) => {
     });
 };
 
-// API: devuelve usuarios como JSON para el frontend
+// API devuelve usuarios como JSON para el frontend
 module.exports.ApiListaUsuarios = async (req, res) => {
     try {
         const { data: rows, error } = await supabase
@@ -64,7 +64,7 @@ module.exports.VistaEditarUsuario = async (req, res) => {
         res.redirect('/admin/lista');
     }
 };
-
+//Que pueda EDITAR   algun usuario, sujeto a rol oficial
 module.exports.EditarUsuario = async (req, res) => {
     const id = req.body.idusuario;
     try {
@@ -97,7 +97,7 @@ module.exports.EditarUsuario = async (req, res) => {
         });
     }
 };
-
+//Que pueda eliminar algun usuario, sujeto a rol oficial
 module.exports.EliminarUsuario = async (req, res) => {
     try {
         await supabase.from('usuario').delete().eq('idusuario', req.body.idusuario);

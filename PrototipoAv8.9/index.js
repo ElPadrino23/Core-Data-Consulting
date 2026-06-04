@@ -1,176 +1,144 @@
-// index
+// index.js - CoreData Consulting
 
-//Librerias no tocar
+
 const express    = require('express');
 const bodyParser = require('body-parser');
 const path       = require('path');
 const fileUpload = require('express-fileupload');
 const session    = require('express-session');
-const auth       = require('./middleware/auth');
+
 const app = express();
 
+// Middlewares RBAC para accesos y seguridad
+const { verificarSesion, verificarRol } = require('./middleware/auth');
+
+// Modelos para el dashboard
 const modelClientes    = require('./models/clientes.model');
 const modelOperaciones = require('./models/operaciones.model');
 const modelAlertas     = require('./models/alertas.model');
 
-// Credenciales de acceso rapido para pruebas
-const usuarioDemo = {
-    correo: 'demo@sofom.mx',
-    password: 'demo123'
-};
-
-// Notificar el uso de ejs
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
-// Sesiones
 app.use(session({
-    secret:            'pld-sofom-secret-2024',
-    resave:            false,
+    secret: 'coredata-pld-secret-2026',
+    resave: false,
     saveUninitialized: false,
-    cookie:            { maxAge: 8 * 60 * 60 * 1000 }
+    cookie: { maxAge: 1000 * 60 * 60 * 8, httpOnly: true }
 }));
 
-// Middleware para archivos
 app.use(fileUpload());
-
-// Middleware para parsear datos
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-// jala los archivos que esten publicos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Marca la ruta activa para resaltarla en la navegacion
+// Exponer usuario y ruta activa a todas las vistas
 app.use((req, res, next) => {
     res.locals.currentPath = req.path;
+    res.locals.usuario     = req.session.usuario || null;
     next();
 });
 
-//Conocer el estado del servidor
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-});
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
-// rutas a clientes
-const rutasClientes = require('./routes/clientes.routes');
-app.use('/clientes', auth, rutasClientes);
-
-// rutas a operaciones
-const rutasOperaciones = require('./routes/operaciones.routes');
-app.use('/operaciones', auth, rutasOperaciones);
-
-// rutas a alertas
-const rutasAlertas = require('./routes/alertas.routes');
-app.use('/alertas', auth, rutasAlertas);
-
-// Rutas de contratos
-const rutasContratos = require('./routes/contratos.routes');
-app.use('/contratos', auth, rutasContratos);
-
-// Rutas de reportes
-const rutasReportes = require('./routes/reportes.routes');
-app.use('/reportes', auth, rutasReportes);
-
-// Rutas de admin
-const rutasAdmin = require('./routes/admin.routes');
-app.use('/admin', auth, rutasAdmin);
-
-// Rutas de reglas
-const rutasReglas = require('./routes/reglas.routes');
-app.use('/reglas', auth, rutasReglas);
-
-// Rutas de historial
-const rutasHistorial = require('./routes/historial.routes');
-app.use('/historial', auth, rutasHistorial);
-
-// Rutas de buzón interno
-const rutasBuzonInterno = require('./routes/buzon_interno.routes');
-app.use('/buzon-interno', auth, rutasBuzonInterno);
-
-// Rutas de login
+//LOGIN (publico)
 const rutasLogin = require('./routes/login.routes');
 app.use('/login', rutasLogin);
+app.get('/', (req, res) => res.redirect('/login'));
 
-// Ruta raiz redirige al login
-app.get('/', (req, res) => {
-    res.redirect('/login');
-});
+//PORTAL CLIENTE solo Cliente
+const rutasPortal = require('./routes/portal.routes');
+app.use('/portal', verificarSesion, verificarRol('Cliente'), rutasPortal);
 
-// Dashboard principal despues del inicio de sesion
-app.get('/dashboard', auth, (req, res) => {
-    res.render('dashboard');
-});
+//DASHBOARD del Oficial + Analista
+app.get('/dashboard',
+    verificarSesion,
+    verificarRol('Oficial de Cumplimiento', 'Analista'),
+    (req, res) => res.render('dashboard', { mensaje: req.query.mensaje || null })
+);
 
-// API para los contadores del dashboard
-app.get('/api/dashboard', auth, async (req, res) => {
-    try {
-        const resultadoClientes    = await modelClientes.ObtenerClientesLista();
-        const resultadoOperaciones = await modelOperaciones.ObtenerOperaciones();
-        const resultadoAlertas     = await modelAlertas.ObtenerAlertas();
+app.get('/api/dashboard',
+    verificarSesion,
+    verificarRol('Oficial de Cumplimiento', 'Analista'),
+    async (req, res) => {
+        try {
+            const [rc, ro, ra] = await Promise.all([
+                modelClientes.ObtenerClientesLista(),
+                modelOperaciones.ObtenerOperaciones(),
+                modelAlertas.ObtenerAlertas()
+            ]);
+            const clientes    = rc.clientes    || [];
+            const operaciones = ro.operaciones || [];
+            const alertas     = ra.alertas     || [];
 
-        const clientes    = resultadoClientes.clientes || [];
-        const operaciones = resultadoOperaciones.operaciones || [];
-        const alertas     = resultadoAlertas.alertas || [];
-
-        // Ultimas 5 alertas para el dashboard
-        const alertasRecientes = alertas.slice(0, 5).map(function(a) {
-            return {
-                descripcion: a.regla || ('Operacion #' + (a.idoperacion || '')),
-                nivel:       a.nivel || '',
-                estatus:     a.estatus || '',
-                fecha:       a.fecha || ''
-            };
-        });
-
-        // Distribucion de clientes por nivel de riesgo
-        const distribucionRiesgo = ['Bajo', 'Medio', 'Alto'].map(function(nivel) {
-            return {
-                nivel:    nivel,
-                cantidad: clientes.filter(function(c) { return c.nivelriesgo === nivel; }).length
-            };
-        });
-
-        res.json({
-            totalClientes:          clientes.length,
-            totalOperaciones:       operaciones.length,
-            totalAlertasPendientes: alertas.filter(function(a) { return a.estatus !== 'Resuelta'; }).length,
-            totalReportesListos:    0,
-            alertasRecientes:       alertasRecientes,
-            distribucionRiesgo:     distribucionRiesgo
-        });
-    } catch (error) {
-        res.json({
-            totalClientes: 0, totalOperaciones: 0,
-            totalAlertasPendientes: 0, totalReportesListos: 0,
-            alertasRecientes: [], distribucionRiesgo: []
-        });
+            res.json({
+                totalClientes:          clientes.length,
+                totalOperaciones:       operaciones.length,
+                totalAlertasPendientes: alertas.filter(a => a.estatus !== 'Resuelta').length,
+                totalReportesListos:    0,
+                alertasRecientes: alertas.slice(0, 5).map(a => ({
+                    descripcion: a.regla || ('Operacion #' + (a.idoperacion || '')),
+                    nivel: a.nivel || '', estatus: a.estatus || '', fecha: a.fecha || ''
+                })),
+                distribucionRiesgo: ['Bajo','Medio','Alto'].map(nivel => ({
+                    nivel, cantidad: clientes.filter(c => c.nivelriesgo === nivel).length
+                }))
+            });
+        } catch {
+            res.json({ totalClientes:0, totalOperaciones:0, totalAlertasPendientes:0,
+                totalReportesListos:0, alertasRecientes:[], distribucionRiesgo:[] });
+        }
     }
-});
+);
 
-// Manejador de errores global
+// Al colocar oficial, se entiende que tiene un grado alto de autoridad y de acceso al sistema
+//sin embargo tambien el sistema deberia ser accesible a mandos altos del cliente de swa law o administradores.
+//
+
+//CLIENTES Oficial + Analista
+const rutasClientes = require('./routes/clientes.routes');
+app.use('/clientes', verificarSesion, verificarRol('Oficial de Cumplimiento', 'Analista'), rutasClientes);
+
+//OPERACIONES Oficial + Analista
+const rutasOperaciones = require('./routes/operaciones.routes');
+app.use('/operaciones', verificarSesion, verificarRol('Oficial de Cumplimiento', 'Analista'), rutasOperaciones);
+
+//ALERTAS Oficial + Analista
+const rutasAlertas = require('./routes/alertas.routes');
+app.use('/alertas', verificarSesion, verificarRol('Oficial de Cumplimiento', 'Analista'), rutasAlertas);
+
+//CONTRATOS Oficial + Analista
+const rutasContratos = require('./routes/contratos.routes');
+app.use('/contratos', verificarSesion, verificarRol('Oficial de Cumplimiento', 'Analista'), rutasContratos);
+
+//BUZON INTERNO Oficial + Analista
+const rutasBuzonInterno = require('./routes/buzon_interno.routes');
+app.use('/buzon-interno', verificarSesion, verificarRol('Oficial de Cumplimiento', 'Analista'), rutasBuzonInterno);
+
+// REPORTES solo Oficial
+const rutasReportes = require('./routes/reportes.routes');
+app.use('/reportes', verificarSesion, verificarRol('Oficial de Cumplimiento'), rutasReportes);
+
+//ADMIN solo Oficial y en teoria admin
+const rutasAdmin = require('./routes/admin.routes');
+app.use('/admin', verificarSesion, verificarRol('Oficial de Cumplimiento'), rutasAdmin);
+
+//REGLAS solo Oficial, admin o la sofom un mando alto
+const rutasReglas = require('./routes/reglas.routes');
+app.use('/reglas', verificarSesion, verificarRol('Oficial de Cumplimiento'), rutasReglas);
+
+//HISTORIAL solo Oficial
+const rutasHistorial = require('./routes/historial.routes');
+app.use('/historial', verificarSesion, verificarRol('Oficial de Cumplimiento'), rutasHistorial);
+
+// Error handler
 app.use((error, req, res, next) => {
     console.error(error.message);
-
     if (req.path.includes('/api/')) {
-        res.status(503).json({
-            msg: 'No fue posible consultar la base de datos',
-            detalle: error.message
-        });
-        return;
+        return res.status(503).json({ msg: 'Error interno', detalle: error.message });
     }
-
     next(error);
 });
 
-// inicia el servidor en el host 3000
-const server = app.listen(3000, () => {
-    console.log('-> http://localhost:3000');
-});
-
-// cerrar el servidor correctamente cuando se use Ctrl + C
-process.on('SIGINT', () => {
-    server.close(() => {
-        process.exit(0);
-    });
-});
+const server = app.listen(3000, () => console.log('-> http://localhost:3000'));
+process.on('SIGINT', () => server.close(() => process.exit(0)));

@@ -1,4 +1,4 @@
-// Controller de alertas PLD
+// Controller de alertas PLD automaticas
 
 const modelAlertas   = require('../models/alertas.model');
 const modelHistorial = require('../models/historial.model');
@@ -11,7 +11,7 @@ module.exports.ObtenerAlertas = async (req, res) => {
     });
 };
 
-// API: devuelve alertas como JSON para el frontend
+// API devuelve alertas como JSON para el frontend
 module.exports.ApiListaAlertas = async (req, res) => {
     try {
         const resultado = await modelAlertas.ObtenerAlertas();
@@ -33,7 +33,7 @@ module.exports.ApiListaAlertas = async (req, res) => {
     }
 };
 
-// API: resolver una alerta
+// API de resolver una alerta
 module.exports.ApiResolverAlerta = async (req, res) => {
     try {
         const { idAlerta, resolucion } = req.body;
@@ -57,7 +57,7 @@ module.exports.ResolverAlerta = async (req, res) => {
     res.redirect('/alertas/lista');
 };
 
-// API: cambiar estatus de alerta (Pendiente -> En revision)
+// API cambiar estatus de alerta (Pendiente -> En revision)
 module.exports.ApiCambiarEstatus = async (req, res) => {
     try {
         const { idAlerta, estatus } = req.body;

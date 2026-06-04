@@ -2,9 +2,60 @@
 
 <aside class="app-sidebar">
     <div class="sidebar-brand">
-        <a href="/dashboard">SVA LAW</a>
+        <a href="<%= usuario && usuario.rol === 'Cliente' ? '/portal/mi-expediente' : '/dashboard' %>">SVA LAW</a>
     </div>
+
+    <%/* Bloque de usuario conectado - nombre + pill de rol con color */%>
+    <% if (usuario) { %>
+    <div style="
+        margin: 10px 10px 4px;
+        padding: 10px 12px;
+        background: rgba(0,0,0,0.22);
+        border-radius: 7px;
+        border-left: 3px solid #5bc8e8;
+    ">
+        <span style="
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #c8eaf5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 5px;
+        "><%= usuario.nombre %></span>
+        <span style="
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: #5bc8e8;
+            color: #0b2535;
+        "><%= usuario.rol %></span>
+    </div>
+    <% } %>
+
     <ul class="sidebar-menu">
+
+        <%/* === MENU CLIENTE === */%>
+        <% if (usuario && usuario.rol === 'Cliente') { %>
+
+        <li class="<%= currentPath.indexOf('/portal/mi-expediente') === 0 ? 'active' : '' %>">
+            <a href="/portal/mi-expediente">Mi expediente</a>
+        </li>
+        <li class="<%= currentPath.indexOf('/portal/mis-operaciones') === 0 ? 'active' : '' %>">
+            <a href="/portal/mis-operaciones">Mis operaciones</a>
+        </li>
+        <li class="<%= currentPath.indexOf('/portal/mis-contratos') === 0 ? 'active' : '' %>">
+            <a href="/portal/mis-contratos">Mis contratos</a>
+        </li>
+
+        <%/* === MENU OFICIAL Y ANALISTA === */%>
+        <% } else { %>
+
         <li class="<%= currentPath === '/dashboard' ? 'active' : '' %>">
             <a href="/dashboard">Inicio</a>
         </li>
@@ -20,11 +71,14 @@
         <li class="<%= currentPath.indexOf('/contratos') === 0 ? 'active' : '' %>">
             <a href="/contratos/lista">Contratos</a>
         </li>
+        <li class="<%= currentPath.indexOf('/buzon-interno') === 0 ? 'active' : '' %>">
+            <a href="/buzon-interno/lista">Buzón Interno</a>
+        </li>
+
+        <%/* Solo Oficial de Cumplimiento */%>
+        <% if (usuario && usuario.rol === 'Oficial de Cumplimiento') { %>
         <li class="<%= currentPath.indexOf('/reportes') === 0 ? 'active' : '' %>">
             <a href="/reportes/lista">Reportes</a>
-        </li>
-        <li class="<%= currentPath.indexOf('/admin') === 0 ? 'active' : '' %>">
-            <a href="/admin/lista">Admin</a>
         </li>
         <li class="<%= currentPath.indexOf('/reglas') === 0 ? 'active' : '' %>">
             <a href="/reglas/lista">Reglas</a>
@@ -32,17 +86,22 @@
         <li class="<%= currentPath.indexOf('/historial') === 0 ? 'active' : '' %>">
             <a href="/historial/lista">Historial</a>
         </li>
-        <li class="<%= currentPath.indexOf('/buzon-interno') === 0 ? 'active' : '' %>">
-            <a href="/buzon-interno/lista">Buzón Interno</a>
+        <li class="<%= currentPath.indexOf('/admin') === 0 ? 'active' : '' %>">
+            <a href="/admin/lista">Admin</a>
         </li>
+        <% } %>
+
+        <% } %>
+
         <li>
-            <a href="/login" class="logout" style="background:#c75757 !important; color:white !important; display:block;">Cerrar sesion</a>
+            <a href="/login/logout" style="background:#c75757 !important;color:white !important;display:block;">Cerrar sesion</a>
         </li>
     </ul>
 </aside>
 
 <div class="nav-context">
     <div class="nav-context-inner">
+        <% if (usuario && usuario.rol !== 'Cliente') { %>
         <span>Ruta:</span>
         <a href="/dashboard">Inicio</a>
         <% if (currentPath.indexOf('/clientes') === 0) { %>
@@ -63,6 +122,7 @@
             <span>/ Historial</span>
         <% } else if (currentPath.indexOf('/buzon-interno') === 0) { %>
             <span>/ Buzón Interno</span>
+        <% } %>
         <% } %>
     </div>
 </div>

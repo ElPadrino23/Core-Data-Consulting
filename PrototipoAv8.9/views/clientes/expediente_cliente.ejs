@@ -212,6 +212,7 @@
     document.getElementById('limiteOperativo').addEventListener('input', calcularRiesgo);
 
     // Forzar mayusculas en RFC y CURP
+    // Validacion en tiempo real del RFC segun tipo de cliente - Carlos Arturo Gomez Ayala
     document.getElementById('rfc').addEventListener('input', function() {
         this.value = this.value.toUpperCase();
     });
@@ -281,18 +282,36 @@
         const correo = document.getElementById('correo').value.trim();
         const cp     = document.getElementById('codigoPostal').value.trim();
 
+        // Validacion mejorada 
+        // RFC persona fisica = 4letras+6nums+3homoclave (13), moral = 3letras+6nums+3homoclave (12), poner un rcf simulado a uno real
+        const rfcRegexFisica = /^[A-Z&Ñ]{4}\d{6}[A-Z0-9]{3}$/i;
+        const rfcRegexMoral  = /^[A-Z&Ñ]{3}\d{6}[A-Z0-9]{3}$/i;
+        const tipoCliente    = document.getElementById('tipoCliente').value;
+
         if (!nombre) errores.push('• El nombre / razón social es obligatorio.');
         if (!rfc)    errores.push('• El RFC es obligatorio.');
-        if (rfc && (rfc.length < 12 || rfc.length > 13)) errores.push('• El RFC debe tener 12 o 13 caracteres.');
+        if (rfc) {
+            const rfcValido = tipoCliente === 'Persona Moral'
+                ? rfcRegexMoral.test(rfc)
+                : rfcRegexFisica.test(rfc);
+            if (!rfcValido) errores.push('• El RFC no tiene el formato correcto para ' + tipoCliente + '.');
+        }
         if (curp && curp.length !== 18) errores.push('• La CURP debe tener exactamente 18 caracteres.');
-        if (tel && !/^\d{10}$/.test(tel)) errores.push('• El teléfono debe tener exactamente 10 dígitos numéricos.');
+        // Correo es obligatorio para el sistema PLD  necesario para notificaciones
+        if (!correo) errores.push('• El correo electrónico es obligatorio.');
         if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) errores.push('• El correo electrónico no tiene un formato válido.');
+        if (tel && !/^\d{10}$/.test(tel)) errores.push('• El teléfono debe tener exactamente 10 dígitos numéricos.');
         if (cp && !/^\d{5}$/.test(cp)) errores.push('• El código postal debe tener exactamente 5 dígitos numéricos.');
 
+        // Deshabilitar boton Siguiente mientras haya errores
+        // Esto evita que el usuario avance con datos invalidos en un sistema regulado por la CNBV
+        const btnSiguiente = document.querySelector('#paso1 .btn:not(.btn.secondary)');
         if (errores.length > 0) {
             mostrarErrores(errores);
+            if (btnSiguiente) btnSiguiente.disabled = true;
             return;
         }
+        if (btnSiguiente) btnSiguiente.disabled = false;
 
         mostrarErrores([]);
         document.getElementById('paso1').style.display = 'none';
@@ -302,6 +321,15 @@
     }
 
     function irPaso3() {
+        // El INE o Pasaporte es obligatorio por los requisitos KYC de know your client de la CNBV para la SOFOM
+        // Los demas documentos son opcionales y pueden cargarse despues desde el expediente
+        const ine = document.getElementById('ine');
+        if (ine && (!ine.files || ine.files.length === 0)) {
+            alert('El INE o Pasaporte es obligatorio para registrar un cliente en el sistema PLD. Por favor adjunta el documento antes de continuar.');
+            ine.focus();
+            return;
+        }
+
         const riesgo = document.getElementById('nivelRiesgo').textContent;
 
         const campos = [
