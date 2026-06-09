@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('./../css.ejs') %>
+</head>
+<body>
+<%- include('./../nav.ejs') %>
+
+<main class="app-page">
+    <div class="app-header">
+        <div>
+            <h1 class="app-title">Lista PEP / Riesgo</h1>
+            <p class="app-subtitle">Personas Políticamente Expuestas y listas de riesgo para contraste automático al registrar clientes.</p>
+        </div>
+        <a href="/admin/lista" class="btn secondary">Volver a usuarios</a>
+    </div>
+
+    <% if (mensaje) { %>
+        <div class="feedback"><%= mensaje %></div>
+    <% } %>
+
+    <!-- Agregar entrada -->
+    <section class="panel" style="margin-bottom:18px;">
+        <h3 style="margin:0 0 16px;color:var(--azul-oscuro);font-size:16px;">Agregar entrada</h3>
+        <form action="/admin/pep/agregar" method="POST">
+            <div class="form-grid">
+                <div>
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required placeholder="Nombre completo">
+                </div>
+                <div>
+                    <label>RFC</label>
+                    <input type="text" name="rfc" maxlength="13" placeholder="XAXX010101000" style="text-transform:uppercase;">
+                </div>
+                <div>
+                    <label>Tipo de lista</label>
+                    <select name="tipo_lista">
+                        <option value="PEP">PEP</option>
+                        <option value="Sancion">Sanción</option>
+                        <option value="Riesgo">Riesgo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Agregar</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Lista -->
+    <section class="panel">
+        <table class="striped responsive-table">
+            <thead>
+                <tr><th>ID</th><th>Nombre</th><th>RFC</th><th>Tipo de lista</th><th>Fecha inclusión</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+                <% if (lista.length === 0) { %>
+                    <tr><td colspan="6" style="color:var(--muted)">La lista está vacía.</td></tr>
+                <% } %>
+                <% lista.forEach(function(p) { %>
+                    <tr>
+                        <td><%= p.id %></td>
+                        <td><%= p.nombre %></td>
+                        <td><%= p.rfc || '—' %></td>
+                        <td><span class="badge-soft badge-danger"><%= p.tipo_lista %></span></td>
+                        <td><%= p.fecha_inclusion || '—' %></td>
+                        <td>
+                            <form action="/admin/pep/eliminar" method="POST" style="display:inline;">
+                                <input type="hidden" name="id" value="<%= p.id %>">
+                                <button type="submit" class="btn-small btn" style="background:var(--rojo);">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<%- include('./../scripts.ejs') %>
+</body>
+</html>

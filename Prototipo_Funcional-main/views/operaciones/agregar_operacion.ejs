@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('./../css.ejs') %>
+</head>
+<body>
+<%- include('./../nav.ejs') %>
+
+<main class="app-page">
+    <div class="app-header">
+        <div>
+            <h1 class="app-title">Registrar operación</h1>
+            <p class="app-subtitle">Captura una nueva transferencia, depósito o pago.</p>
+        </div>
+        <a href="/operaciones/lista" class="btn secondary">Volver a la lista</a>
+    </div>
+
+<section class="panel" style="max-width:600px;">
+
+        <div class="form-grid">
+
+            <div>
+                <label>Cliente</label>
+                <select id="idCliente" class="browser-default" required onchange="filtrarContratos()">
+                    <option value="">-- Seleccionar cliente --</option>
+                    <% clientes.forEach(function(c) { %>
+                        <option value="<%= c.idcliente %>"><%= c.nombrerazonsocial %></option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div>
+                <label>Contrato</label>
+                <select id="idContrato" class="browser-default" disabled>
+                    <option value="">-- Seleccionar cliente primero --</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Tipo de operación</label>
+                <select id="tipoOperacion" class="browser-default">
+                    <option value="Deposito">Depósito</option>
+                    <option value="Retiro">Retiro</option>
+                    <option value="Pago">Pago</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Producto</label>
+                <select id="producto" class="browser-default">
+                    <option value="Credito">Crédito</option>
+                    <option value="Ahorro">Ahorro</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Monto (MXN)</label>
+                <input type="number" id="monto" min="1" placeholder="0.00">
+            </div>
+
+            <div>
+                <label>Fecha</label>
+                <input type="date" id="fecha">
+            </div>
+
+        </div>
+
+        <br>
+        <button class="btn" onclick="guardarOperacion()">Registrar operación</button>
+
+    </section>
+
+    <div id="contratos-data" data-json="<%- JSON.stringify(contratos).replace(/"/g, '&quot;') %>" style="display:none"></div>
+</main>
+
+<%- include('./../scripts.ejs') %>
+<script>
+    const todosContratos = JSON.parse(document.getElementById('contratos-data').dataset.json || '[]');
+    document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+
+    function filtrarContratos() {
+        const idCliente = document.getElementById('idCliente').value;
+        const select    = document.getElementById('idContrato');
+        select.innerHTML = '';
+
+        if (!idCliente) {
+            select.disabled = true;
+            select.innerHTML = '<option value="">-- Seleccionar cliente primero --</option>';
+            return;
+        }
+
+        const contratos = todosContratos.filter(c => String(c.idcliente) === String(idCliente));
+        select.disabled = false;
+        select.innerHTML = '<option value="">-- Sin contrato --</option>';
+        contratos.forEach(function(c) {
+            const opt = document.createElement('option');
+            opt.value       = c.idcontrato;
+            opt.textContent = `#${c.idcontrato} – ${c.producto}`;
+            select.appendChild(opt);
+        });
+    }
+
+    async function guardarOperacion() {
+        const idCliente     = document.getElementById('idCliente').value;
+        const idContrato    = document.getElementById('idContrato').value || null;
+        const tipoOperacion = document.getElementById('tipoOperacion').value;
+        const producto      = document.getElementById('producto').value;
+        const monto         = document.getElementById('monto').value;
+        const fecha         = document.getElementById('fecha').value;
+
+        if (!idCliente || !monto || !fecha) {
+            alert('Cliente, monto y fecha son obligatorios');
+            return;
+        }
+
+        try {
+            const resp   = await fetch('/operaciones/agregar', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ idCliente, idContrato, tipoOperacion, producto, monto, fecha })
+            });
+            const result = await resp.json();
+
+            if (result.exito) {
+                window.location.href = '/operaciones/lista';
+            } else {
+                alert('Error: ' + result.msg);
+            }
+        } catch (err) {
+            alert('Error al registrar: ' + err.message);
+        }
+    }
+</script>
+</body>
+</html>

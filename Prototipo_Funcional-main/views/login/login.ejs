@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <%- include('../css') %>
+</head>
+<body>
+<main class="login-screen">
+    <section class="login-hero">
+        <div class="login-kicker">CoreData Consulting</div>
+        <h1 class="login-title">Sistema Automatizado SVA LAW</h1>
+
+        <div class="demo-block">
+            <span class="demo-title">Credenciales DEMO</span>
+            <p style="margin:8px 0 0; font-size:13px;">
+                <strong style="color:var(--azul-oscuro);">Oficial de Cumplimiento</strong><br>
+                <strong>Correo:</strong> oficial@sofom.mx<br>
+                <strong>Contraseña:</strong> oficial123
+            </p>
+            <p style="margin:8px 0 0; font-size:13px;">
+                <strong style="color:var(--azul-oscuro);">Analista</strong><br>
+                <strong>Correo:</strong> ana.torres@sofom.mx<br>
+                <strong>Contraseña:</strong> analista123
+            </p>
+            <p style="margin:8px 0 0; font-size:13px;">
+                <strong style="color:var(--azul-oscuro);">Cliente</strong><br>
+                <strong>Correo:</strong> carlos.h@email.com<br>
+                <strong>Contraseña:</strong> cliente123
+            </p>
+        </div>
+    </section>
+
+    <section class="login-card">
+        <div class="login-card-header">
+            <div class="login-card-kicker">Inicio de sesión</div>
+            <div class="login-brand">SVA LAW</div>
+            <p class="login-help">Ingrese sus credenciales para acceder al tablero.</p>
+        </div>
+
+        <% if (mensaje) { %>
+            <div class="feedback <%= mensaje.includes('ncorrectos') || mensaje.includes('conectar') ? 'error' : '' %>"><%= mensaje %></div>
+        <% } %>
+
+        <form action="/login" method="POST">
+            <div class="login-field">
+                <label for="correo">Correo electrónico</label>
+                <input type="email" name="correo" id="correo" placeholder="usuario@sofom.mx" required>
+            </div>
+
+            <div class="login-field">
+                <label for="password">Contraseña</label>
+                <input type="password" name="password" id="password" placeholder="Ingrese su contraseña" required>
+            </div>
+
+            <div class="login-actions">
+                <button type="submit" class="btn">Iniciar sesión</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>
